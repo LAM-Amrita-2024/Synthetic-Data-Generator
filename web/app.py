@@ -22,7 +22,8 @@ def ui_input():
 
     num_tables = st.selectbox('Select number of tables', [1, 2])
     params['num_tables'] = num_tables
-    params['sample_data'] = st.checkbox('Sample data', value=True)
+    params['sample_data'] = True
+    params['scale_factor'] = st.slider('Scale factor', min_value=1.0, max_value=10.0, value=1.0, step=0.1)
 
     if num_tables == 2:
         params['foreign_key'] = st.checkbox('Foreign keys', value=True)
@@ -34,8 +35,7 @@ def ui_input():
     for i in range(num_tables):
         with st.expander(f'Table {i+1}', expanded=True):
             name = st.text_input(f'Enter name of table {i+1}', value=f'DF{i+1}', key=f'table_name_{i}')
-            num_rows = st.number_input(f'Enter number of rows for table {i+1}', min_value=1, value=200, key=f'table_rows_{i}')
-            params['with_sample_tables'].append({'name': name, 'num_rows': num_rows})
+            params['with_sample_tables'].append({'name': name})
 
     if params['sample_data']:
         st.subheader("Upload Sample Data")
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     st.title("Synthetic Data Generator")
 
     # Sidebar for input method
-    input_method = st.sidebar.selectbox("Choose input method", ["YAML", "UI"])
+    input_method = st.sidebar.selectbox("Choose input method", ["UI", "YAML"])
 
     params = None
     tables = []
@@ -241,13 +241,18 @@ if __name__ == "__main__":
 
                 table = without_sample_generate_handle(params, table)
 
+                st.write("Splitting the generated data into two tables")
+                res1, res2 = split_columns(table, df1_cols)
 
-                if params['num_tables']>1:
-                    res1, res2 = split_columns(table, df1_cols)
-
+                st.subheader("Table 1")
                 st.write(res1)
+                st.download_button(label="Download CSV", data=res1.to_csv().encode("utf-8"), file_name=f"generated_table_{datetime.datetime.now()}.csv", mime="text/csv")
+
+                st.subheader("Table 2")
                 st.write(res2)
-                st.download_button(label="Download CSV", data=table.to_csv().encode("utf-8"), file_name=f"generated_table_{datetime.datetime.now()}.csv", mime="text/csv")
+                st.download_button(label="Download CSV", data=res2.to_csv().encode("utf-8"), file_name=f"generated_table_{datetime.datetime.now()}.csv", mime="text/csv")
+
+                analysis(original_data, table)
 
             else:
                 st.header("Generated Data")
