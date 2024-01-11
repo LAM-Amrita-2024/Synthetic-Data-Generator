@@ -134,6 +134,11 @@ def merge_tables(params, tables):
 
     return df, df1.columns.values.tolist(), df2.columns.values.tolist()
 
+def split_columns(df, split_columns):
+    df1 = df[split_columns]
+    df2 = df.drop(columns=split_columns)
+    return df1, df2
+
 def without_sample_generate_handle(params, table):
 
     numeric_data = table.select_dtypes(include=['int64', 'float64'])
@@ -236,9 +241,12 @@ if __name__ == "__main__":
 
                 table = without_sample_generate_handle(params, table)
 
-                generated_data = table
 
-                st.write(table)
+                if params['num_tables']>1:
+                    res1, res2 = split_columns(table, df1_cols)
+
+                st.write(res1)
+                st.write(res2)
                 st.download_button(label="Download CSV", data=table.to_csv().encode("utf-8"), file_name=f"generated_table_{datetime.datetime.now()}.csv", mime="text/csv")
 
             else:
