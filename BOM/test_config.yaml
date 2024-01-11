@@ -1,0 +1,7 @@
+num_tables: 1
+sample_data: true
+scale_factor: 10
+foreign_key: false
+foreign_key_col: None
+with_sample_tables:
+  - name: DF1
